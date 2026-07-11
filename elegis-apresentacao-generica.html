@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elegis · Sistema para Registro de Candidatura · Monteiro e Monteiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tinta:      #006851;
+    --tinta-2:    #004E3D;
+    --esmeralda:  #007A56;
+    --esmeralda-lt:#E2F3EC;
+    --bronze:     #00A170;
+    --bronze-lt:  #E0F5EC;
+    --marfim:     #FFFFFF;
+    --pedra:      #E3E6E5;
+    --grafite:    #1F2426;
+    --cinza:      #6B7280;
+    --cinza-lt:   #F2F5F4;
+    --cinza-marca:#AEADB3;
+    --branco:     #FFFFFF;
+    --critico:    #C0392B;
+    --critico-lt: #FBEAE8;
+    --ambar:      #B45309;
+    --ambar-lt:   #FDF0DE;
+    --azul:       #2C5282;
+    --azul-lt:    #E9F0F8;
+    --roxo:       #5B3E82;
+    --roxo-lt:    #F0EAF6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--grafite);
+    background: var(--branco);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .marca-nome, .perfil-nome { font-family: 'Poppins', Arial, sans-serif; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; }
+  code { background: var(--cinza-lt); border: 1px solid var(--pedra); border-radius: 4px; padding: 1px 6px; font-size: 12px; color: var(--tinta-2); }
+
+  /* ── Barra de progresso ── */
+  #progresso-barra { position: fixed; top: 0; left: 0; z-index: 9999; height: 3px; background: var(--bronze); width: 0%; transition: width .15s linear; }
+
+  /* ── Capa ── */
+  .capa {
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.02) 0px, rgba(255,255,255,.02) 1px, transparent 1px, transparent 4px),
+      linear-gradient(165deg, var(--tinta) 0%, var(--tinta-2) 65%, #003C2F 100%);
+    color: var(--marfim);
+    padding: 56px 72px 52px;
+    position: relative;
+    overflow: hidden;
+  }
+  .capa-padrao { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .capa-padrao svg { position: absolute; right: -90px; top: -40px; width: 620px; height: 480px; }
+
+  /* marca sem ícone */
+  .marca { position: relative; z-index: 1; margin-bottom: 40px; }
+  .marca-nome { font-size: 15px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; padding-bottom: 8px; border-bottom: 1px solid rgba(0,161,112,.55); display: inline-block; }
+  .marca-sub { display: block; margin-top: 8px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.55); font-weight: 500; }
+
+  /* destinatário badge */
+  .capa-destinatario {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,161,112,.18); border: 1px solid rgba(0,161,112,.45);
+    border-radius: 4px; padding: 6px 14px; margin-bottom: 20px;
+    font-size: 12px; color: var(--bronze-lt); font-weight: 500;
+  }
+  .capa-destinatario strong { font-weight: 700; color: var(--marfim); }
+
+  .capa h1 { position: relative; z-index: 1; font-size: 40px; font-weight: 600; line-height: 1.18; max-width: 640px; margin-bottom: 18px; letter-spacing: -.01em; }
+  .capa p.capa-lead { position: relative; z-index: 1; font-size: 16px; color: rgba(255,255,255,.72); max-width: 580px; margin-bottom: 42px; }
+  .capa-meta { position: relative; z-index: 1; display: flex; gap: 40px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 22px; font-size: 13px; flex-wrap: wrap; }
+  .capa-meta dt { font-weight: 600; color: rgba(0,161,112,.9); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .capa-meta dd { margin-top: 4px; color: rgba(255,255,255,.85); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Layout principal ── */
+  .corpo { display: grid; grid-template-columns: 232px 1fr; min-height: calc(100vh - 250px); }
+  .sumario { background: var(--cinza-lt); border-right: 1px solid var(--pedra); padding: 30px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sumario-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--cinza); padding: 0 26px 14px; font-weight: 600; }
+  .sumario a { display: block; padding: 9px 26px; color: #57534A; text-decoration: none; font-size: 13px; border-left: 2px solid transparent; transition: all .15s; }
+  .sumario a:hover, .sumario a.ativo { color: var(--tinta); border-left-color: var(--bronze); background: rgba(30,91,66,.06); font-weight: 600; }
+  .sumario-sep { border: none; border-top: 1px solid var(--pedra); margin: 14px 26px; }
+  .sumario-label.sub { padding-top: 4px; }
+
+  /* ── Conteúdo ── */
+  .conteudo { padding: 56px 68px; max-width: 960px; --pad-conteudo: 68px; }
+  section { margin-bottom: 72px; }
+  section:target { scroll-margin-top: 24px; }
+  h2 { font-size: 23px; font-weight: 600; color: var(--tinta); border-bottom: 1px solid var(--pedra); padding-bottom: 14px; margin-bottom: 26px; display: flex; align-items: center; gap: 14px; }
+  h2 .num { font-family: 'Poppins', sans-serif; background: var(--tinta); color: var(--branco); font-size: 12px; font-weight: 800; width: 30px; height: 27px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; padding-top: 4px; clip-path: polygon(50% 4%, 96% 96%, 4% 96%); }
+  h3 { font-size: 15px; font-weight: 700; color: var(--grafite); margin: 32px 0 12px; }
+  p { margin-bottom: 14px; color: #3D3A34; }
+  .lead-sector { color: var(--cinza); font-size: 14px; margin-top: -18px; margin-bottom: 28px; line-height: 1.6; }
+
+  /* ── Cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin: 22px 0; }
+  .card { border: 1px solid var(--pedra); border-radius: 8px; padding: 20px; background: var(--branco); transition: box-shadow .15s, border-color .15s; }
+  .card:hover { border-color: var(--esmeralda); box-shadow: 0 3px 14px rgba(16,36,27,.07); }
+  .card-icon { margin-bottom: 14px; }
+  .card h4 { font-size: 13px; font-weight: 700; margin-bottom: 7px; }
+  .card p { font-size: 12px; color: var(--cinza); margin: 0; }
+  .card.destaque { border-color: var(--bronze); background: var(--bronze-lt); }
+  .card.destaque h4 { color: #0B4A3A; }
+  .icon-linha { width: 22px; height: 22px; stroke: var(--esmeralda); stroke-width: 1.4; fill: none; }
+  .card.destaque .icon-linha { stroke: var(--bronze); }
+
+  /* ── Tabela ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 18px 0; }
+  th { background: var(--tinta); color: var(--marfim); text-align: left; padding: 11px 14px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--pedra); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--cinza-lt); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Badge ── */
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 3px; letter-spacing: .02em; border: 1px solid transparent; }
+  .badge-verde   { background: var(--esmeralda-lt); color: var(--esmeralda); border-color: rgba(30,91,66,.25); }
+  .badge-azul    { background: var(--azul-lt); color: var(--azul); border-color: rgba(44,82,130,.22); }
+  .badge-ambar   { background: var(--ambar-lt); color: var(--ambar); border-color: rgba(147,101,15,.25); }
+  .badge-cinza   { background: var(--cinza-lt); color: #57534A; border-color: var(--pedra); }
+  .badge-critico { background: var(--critico-lt); color: var(--critico); border-color: rgba(169,54,42,.25); }
+  .badge-roxo    { background: var(--roxo-lt); color: var(--roxo); border-color: rgba(91,62,130,.22); }
+
+  /* ── Alerta ── */
+  .alerta { border-left: 3px solid var(--bronze); background: var(--bronze-lt); border-radius: 0 6px 6px 0; padding: 15px 18px; font-size: 13px; color: #0B4A3A; margin: 18px 0; }
+  .alerta strong { display: block; margin-bottom: 4px; font-size: 13px; }
+  .alerta-verde { border-color: var(--esmeralda); background: var(--esmeralda-lt); color: #163C2A; }
+  .alerta-critico { border-color: var(--critico); background: var(--critico-lt); color: #6E241B; }
+
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 34px; }
+  .timeline::before { content: ''; position: absolute; left: 9px; top: 4px; bottom: 4px; width: 1px; background: var(--pedra); }
+  .tl-item { position: relative; margin-bottom: 28px; }
+  .tl-item::before { content: ''; position: absolute; left: -30px; top: 6px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid var(--esmeralda); }
+  .tl-item.alta::before { border-bottom-color: var(--bronze); }
+  .tl-data { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--cinza); font-weight: 600; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace; }
+  .tl-titulo { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .tl-desc { font-size: 13px; color: #4B4740; }
+
+  /* ── Sistema (moldura de navegador) ── */
+  .tela-sistema { border: 1px solid var(--pedra); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(16,36,27,.08); background: var(--branco); }
+  .tela-topo { background: var(--cinza-lt); border-bottom: 1px solid var(--pedra); padding: 10px 14px; display: flex; align-items: center; gap: 7px; }
+  .tela-bolinha { width: 9px; height: 9px; border-radius: 50%; }
+  .tela-url { flex: 1; background: var(--branco); border: 1px solid var(--pedra); border-radius: 5px; padding: 4px 10px; font-size: 11px; color: var(--cinza); font-family: 'JetBrains Mono', monospace; margin-left: 8px; }
+
+  /* ── Blur overlay para dados sensíveis ── */
+  .dado-protegido { filter: blur(5px); user-select: none; pointer-events: none; transition: filter .2s; border-radius: 3px; }
+
+  /* ── Tabs ── */
+  .tabs-nav { display: flex; gap: 4px; border-bottom: 1px solid var(--pedra); margin-bottom: 20px; flex-wrap: wrap; }
+  .tab-btn { background: none; border: none; padding: 11px 18px; font-size: 13px; font-weight: 600; color: var(--cinza); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit; transition: color .15s; }
+  .tab-btn:hover { color: var(--tinta); }
+  .tab-btn.ativo { color: var(--tinta); border-bottom-color: var(--bronze); }
+  .tab-painel { display: none; }
+  .tab-painel.ativo { display: block; }
+
+  /* ── Fluxo linear — layout corrigido ── */
+  .fluxo-grade {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr 28px 1fr;
+    gap: 0;
+    margin: 24px 0;
+    align-items: center;
+  }
+  .fluxo-grade-2 {
+    display: grid;
+    grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
+    gap: 0;
+    margin: 24px 0;
+    align-items: center;
+  }
+  .fluxo-passo { border: 1px solid var(--pedra); border-radius: 8px; padding: 18px 16px; background: var(--branco); height: 100%; }
+  .fluxo-passo .fluxo-num { font-weight: 700; color: var(--bronze); font-size: 12px; margin-bottom: 8px; display: block; }
+  .fluxo-passo h4 { font-size: 13px; margin-bottom: 5px; }
+  .fluxo-passo p { font-size: 12px; color: var(--cinza); margin: 0; }
+  .fluxo-seta { display: flex; align-items: center; justify-content: center; color: var(--bronze); font-size: 18px; }
+
+  /* fluxo simples (3 passos) */
+  .fluxo-3 { grid-template-columns: 1fr 28px 1fr 28px 1fr; }
+
+  .fluxo-decisao { max-width: 540px; margin: 24px auto; text-align: center; }
+  .fluxo-caixa { border: 1px solid var(--pedra); border-radius: 8px; padding: 14px 18px; background: var(--branco); font-size: 13px; font-weight: 600; display: inline-block; }
+  .fluxo-caixa.decisao { border-color: var(--bronze); background: var(--bronze-lt); }
+  .fluxo-linha-v { width: 1px; height: 24px; background: var(--pedra); margin: 0 auto; }
+  .fluxo-ramos { display: flex; justify-content: center; gap: 60px; }
+  .fluxo-ramo { display: flex; flex-direction: column; align-items: center; flex: 1; max-width: 220px; }
+  .fluxo-ramo-label { font-size: 11px; color: var(--cinza); text-transform: uppercase; letter-spacing: .08em; margin: 6px 0; }
+
+  /* ── Layouts ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 18px 0; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 18px 0; }
+  .grid-assimetrico { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin: 18px 0; align-items: start; }
+  .painel-lateral { background: var(--cinza-lt); border: 1px solid var(--pedra); border-radius: 8px; padding: 18px; font-size: 13px; }
+  .painel-lateral h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--bronze); margin-bottom: 10px; }
+  .full-bleed { margin-left: calc(var(--pad-conteudo, 68px) * -1); margin-right: calc(var(--pad-conteudo, 68px) * -1); width: calc(100% + var(--pad-conteudo, 68px) * 2); padding: 36px var(--pad-conteudo, 68px); background: var(--tinta-2); }
+
+  /* ── Perfil equipe ── */
+  .perfil { display: flex; gap: 20px; align-items: flex-start; padding: 20px; border: 1px solid var(--pedra); border-radius: 8px; margin-bottom: 14px; background: var(--branco); }
+  .perfil-avatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--marfim); font-size: 16px; font-weight: 700; flex-shrink: 0; background: var(--tinta); border: 1.5px solid var(--bronze); }
+  .perfil-nome { font-weight: 700; font-size: 16px; margin-bottom: 3px; }
+  .perfil-cargo { font-size: 11.5px; color: var(--bronze); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 8px; }
+  .perfil-desc { font-size: 13px; color: #4B4740; margin-bottom: 0; }
+
+  /* ── Módulos grid ── */
+  .modulos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin: 20px 0; }
+  .modulo-item { border: 1px solid var(--pedra); border-radius: 7px; padding: 13px 14px; background: var(--branco); display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: var(--grafite); transition: border-color .15s, box-shadow .15s; }
+  .modulo-item:hover { border-color: var(--esmeralda); box-shadow: 0 2px 8px rgba(16,36,27,.06); }
+  .modulo-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--cinza); font-weight: 400; min-width: 20px; }
+
+  /* ── Destaque numérico ── */
+  .numeros-destaque { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 24px 0; }
+  .numero-item { text-align: center; padding: 24px 16px; border: 1px solid var(--pedra); border-radius: 8px; background: var(--branco); }
+  .numero-valor { font-size: 36px; font-weight: 800; color: var(--tinta); line-height: 1; margin-bottom: 6px; display: block; }
+  .numero-label { font-size: 12px; color: var(--cinza); }
+
+  /* ── Contato ── */
+  .contato-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-top: 24px; }
+  .contato-item { border: 1px solid var(--pedra); border-radius: 8px; padding: 18px 20px; background: var(--branco); }
+  .contato-rotulo { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--bronze); font-weight: 600; margin-bottom: 6px; }
+  .contato-valor { font-size: 13px; font-family: 'JetBrains Mono', monospace; color: var(--grafite); font-weight: 500; word-break: break-all; }
+
+  /* ── Rodapé ── */
+  footer { background: var(--tinta); color: rgba(255,255,255,.55); text-align: center; font-size: 12px; padding: 22px 32px; letter-spacing: .03em; }
+  footer strong { color: var(--marfim); }
+
+  /* ── Botões ── */
+  .btn { display: inline-flex; align-items: center; gap: 8px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; padding: 10px 18px; border-radius: 6px; border: 1.5px solid transparent; cursor: pointer; background: none; line-height: 1; color: var(--grafite); }
+  .btn-primario { background: var(--tinta); color: var(--marfim); }
+
+  /* ── Responsivo ── */
+  @media (max-width: 900px) {
+    .corpo { grid-template-columns: 1fr; }
+    .sumario { position: relative; height: auto; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--pedra); padding: 14px 0; }
+    .sumario-label { display: none; }
+    .sumario a { white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; padding: 8px 16px; }
+    .sumario a:hover, .sumario a.ativo { border-left-color: transparent; border-bottom-color: var(--bronze); }
+    .sumario-sep { display: none; }
+    .conteudo { padding: 36px 22px; --pad-conteudo: 22px; }
+    .capa { padding: 44px 24px 32px; }
+    .capa h1 { font-size: 28px; }
+    .cards, .grid-2, .grid-3, .grid-assimetrico, .numeros-destaque, .contato-grid { grid-template-columns: 1fr; }
+    .fluxo-grade, .fluxo-grade-2 { grid-template-columns: 1fr; }
+    .fluxo-seta { transform: rotate(90deg); padding: 4px 0; }
+    .fluxo-ramos { flex-direction: column; align-items: center; gap: 14px; }
+  }
+</style>
+</head>
+<body>
+<div id="progresso-barra"></div>
+
+<!-- ══ CAPA ══ -->
+<header class="capa">
+  <div class="capa-padrao" aria-hidden="true">
+    <svg viewBox="0 0 620 480" preserveAspectRatio="none">
+      <polygon points="520,30 630,230 410,230" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.2"/>
+      <polygon points="470,150 580,350 360,350" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="1.2"/>
+      <polygon points="380,270 460,420 300,420" fill="none" stroke="rgba(0,161,112,.28)" stroke-width="1.2"/>
+    </svg>
+  </div>
+  <div class="marca">
+    <span class="marca-nome">Monteiro e Monteiro</span>
+    <span class="marca-sub">Advogados Associados · desde 1991</span>
+  </div>
+  <div class="capa-destinatario">
+    Apresentação · <strong>Gestão Documental de Candidatos · 2026</strong>
+  </div>
+  <h1>Elegis: sistema para Registro de Candidatura</h1>
+  <p class="capa-lead">Do cadastro do pré-candidato à ata da convenção, do Candex ao acompanhamento do RCC no PJe — tudo em um único fluxo, gerenciado pelo escritório para você e seus candidatos.</p>
+  <dl class="capa-meta">
+    <div><dt>Sistema</dt><dd>Elegis · v2026</dd></div>
+    <div><dt>Desenvolvido por</dt><dd>Monteiro e Monteiro Advogados Associados</dd></div>
+    <div><dt>Data</dt><dd>Julho 2026</dd></div>
+    <div><dt>Classificação</dt><dd>Confidencial</dd></div>
+  </dl>
+</header>
+
+<!-- ══ CORPO ══ -->
+<div class="corpo">
+  <nav class="sumario">
+    <p class="sumario-label">O Sistema</p>
+    <a href="#elegis">01 · O que é o Elegis</a>
+    <a href="#fluxo">02 · Fluxo Completo</a>
+    <hr class="sumario-sep">
+    <p class="sumario-label sub">Por dentro</p>
+    <a href="#modulos">03 · Módulos do Candidato</a>
+    <a href="#juridico">04 · Painel Jurídico</a>
+    <hr class="sumario-sep">
+    <p class="sumario-label sub">Etapas finais</p>
+    <a href="#convencao">05 · Convenção e Ata</a>
+    <a href="#candex">06 · Candex e PJe</a>
+    <a href="#equipe">07 · Equipe e Contato</a>
+  </nav>
+
+  <main class="conteudo">
+
+    <!-- ══ 1: O QUE É O ELEGIS ══ -->
+    <section id="elegis">
+      <h2><span class="num">1</span>O que é o Elegis</h2>
+      <p>O Elegis é uma plataforma de gestão documental de pré-candidatura desenvolvida pela Monteiro e Monteiro especificamente para o processo eleitoral brasileiro. Cada candidato acessa o sistema pelo próprio e-mail, preenche seus dados e envia sua documentação. A equipe jurídica do escritório analisa tudo, documento por documento, e o partido acompanha o andamento em tempo real — sem depender de grupos de WhatsApp, planilhas ou ligações de última hora.</p>
+
+      <div class="numeros-destaque">
+        <div class="numero-item">
+          <span class="numero-valor">16</span>
+          <span class="numero-label">Módulos de informação por candidato</span>
+        </div>
+        <div class="numero-item">
+          <span class="numero-valor">3</span>
+          <span class="numero-label">Perfis de acesso distintos</span>
+        </div>
+        <div class="numero-item">
+          <span class="numero-valor">100%</span>
+          <span class="numero-label">Rastreável e auditável</span>
+        </div>
+      </div>
+
+      <h3>Três perfis de acesso</h3>
+      <div class="grid-3">
+        <div class="card destaque">
+          <div class="card-icon">
+            <svg class="icon-linha" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <h4>Candidato</h4>
+          <p>Preenche os 16 módulos no próprio ritmo, faz upload dos documentos exigidos e acompanha em tempo real o que foi aprovado, o que está em análise e o que ainda precisa de atenção.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg class="icon-linha" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h4>Equipe Jurídica</h4>
+          <p>Analisa e valida cada documento individualmente. Aprova, reprova com justificativa ou solicita uma nova versão — tudo registrado e rastreável, com histórico completo de cada decisão.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">
+            <svg class="icon-linha" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </div>
+          <h4>Dirigente Partidário</h4>
+          <p>Acessa um painel gerencial com visão consolidada de toda a chapa: percentual de conclusão por candidato, cumprimento de cota de gênero, pendências documentais e status geral do processo — tudo em tempo real, antes que qualquer problema se torne uma crise.</p>
+        </div>
+      </div>
+
+      <div class="alerta alerta-verde">
+        <strong>Segurança e privacidade garantidas</strong>
+        Cada candidato acessa exclusivamente o próprio perfil. O partido e o escritório têm visão global do processo sem nenhuma exposição cruzada de dados entre candidatos.
+      </div>
+    </section>
+
+    <!-- ══ 2: FLUXO COMPLETO ══ -->
+    <section id="fluxo">
+      <h2><span class="num">2</span>Fluxo Completo</h2>
+      <p class="lead-sector">O processo começa com uma lista de nomes e termina com candidaturas registradas no TRE. Cada etapa se conecta à próxima de forma automática e rastreável.</p>
+
+      <!-- Linha 1: passos 01–03 -->
+      <div class="fluxo-grade" style="margin-bottom:12px;">
+        <div class="fluxo-passo">
+          <span class="fluxo-num">01</span>
+          <h4>Partido fornece dados</h4>
+          <p>Nome, CPF, e-mail, cargo, telefone e data de nascimento dos pré-candidatos. Apenas isso — o restante é coletado diretamente pelo sistema.</p>
+        </div>
+        <div class="fluxo-seta">→</div>
+        <div class="fluxo-passo">
+          <span class="fluxo-num">02</span>
+          <h4>Escritório dispara os convites</h4>
+          <p>O sistema envia um acesso personalizado por e-mail a cada pré-candidato. A partir daí, cada um segue no próprio ritmo.</p>
+        </div>
+        <div class="fluxo-seta">→</div>
+        <div class="fluxo-passo">
+          <span class="fluxo-num">03</span>
+          <h4>Candidato preenche os módulos</h4>
+          <p>16 módulos com dados pessoais, documentos obrigatórios, declarações e foto oficial — tudo dentro do próprio sistema.</p>
+        </div>
+      </div>
+
+      <!-- Linha 2: passos 04–06 -->
+      <div class="fluxo-grade" style="margin-bottom:12px;">
+        <div class="fluxo-passo">
+          <span class="fluxo-num">04</span>
+          <h4>Jurídico valida</h4>
+          <p>A equipe do escritório analisa cada documento, aprova ou reprova com justificativa, e solicita nova versão quando necessário.</p>
+        </div>
+        <div class="fluxo-seta">→</div>
+        <div class="fluxo-passo">
+          <span class="fluxo-num">05</span>
+          <h4>Convenção e ata</h4>
+          <p>Com todos os candidatos aprovados, o sistema gera a ata da convenção automaticamente, com os dados já integrados.</p>
+        </div>
+        <div class="fluxo-seta">→</div>
+        <div class="fluxo-passo">
+          <span class="fluxo-num">06</span>
+          <h4>DRAP e envio da ata</h4>
+          <p>O escritório elabora o Demonstrativo de Regularidade de Atos Partidários (DRAP) e encaminha a ata de convenção ao TRE, instruindo o processo de registro.</p>
+        </div>
+      </div>
+
+      <!-- Linha 3: passo 07 -->
+      <div class="fluxo-grade" style="margin-bottom:0;grid-template-columns:1fr 28px 1fr 28px 1fr;">
+        <div class="fluxo-passo">
+          <span class="fluxo-num">07</span>
+          <h4>Registro no Candex</h4>
+          <p>O próprio escritório transfere os dados e documentos de cada candidato diretamente para o Candex — sistema de registro de candidaturas do TSE — sem nenhuma ação adicional do partido.</p>
+        </div>
+        <div class="fluxo-seta">→</div>
+        <div class="fluxo-passo">
+          <span class="fluxo-num">08</span>
+          <h4>Acompanhamento no PJe</h4>
+          <p>O escritório conduz o RCC no PJe perante o TRE, monitorando intimações, respondendo diligências e interpondo recursos até o resultado final.</p>
+        </div>
+        <div style=""></div>
+      </div>
+
+      <div class="alerta" style="margin-top:20px;">
+        <strong>Um fluxo contínuo, sem retrabalho</strong>
+        Cada dado inserido no Elegis aproveita as etapas seguintes. O que foi validado na análise documental é o mesmo que instrui o registro no Candex — sem redigitação, sem risco de inconsistência.
+      </div>
+    </section>
+
+    <!-- ══ 3: MÓDULOS DO CANDIDATO ══ -->
+    <section id="modulos">
+      <h2><span class="num">3</span>Módulos do Candidato</h2>
+      <p class="lead-sector">Cada candidato acessa uma área personalizada e percorre 16 módulos estruturados. É como um formulário inteligente que garante que nada seja esquecido.</p>
+
+      <div class="tabs-nav">
+        <button class="tab-btn ativo" onclick="mudarAba(this,'painel-tela-dashboard')">Painel do candidato</button>
+        <button class="tab-btn" onclick="mudarAba(this,'painel-tela-dados')">Dados pessoais</button>
+        <button class="tab-btn" onclick="mudarAba(this,'painel-tela-docs')">Anexos e documentos</button>
+      </div>
+
+      <!-- Aba 1: Dashboard -->
+      <div class="tab-painel ativo" id="painel-tela-dashboard">
+        <div class="tela-sistema">
+          <div class="tela-topo">
+            <span class="tela-bolinha" style="background:#FF5F56;"></span>
+            <span class="tela-bolinha" style="background:#FFBD2E;"></span>
+            <span class="tela-bolinha" style="background:#27C93F;"></span>
+            <div class="tela-url">app.elegis.com.br/dashboard</div>
+          </div>
+          <div style="background:#F2F5F4; padding: 32px 28px;">
+            <div style="font-size:22px;font-weight:700;color:var(--tinta);margin-bottom:20px;">Bem-vindo(a), <span class="dado-protegido">Candidato</span>!</div>
+            <div style="border:1px solid var(--pedra);border-radius:10px;padding:20px 24px;background:var(--branco);margin-bottom:16px;">
+              <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--cinza);margin-bottom:6px;">E-MAIL DE CADASTRO</div>
+              <div style="font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--grafite);margin-bottom:16px;" class="dado-protegido">candidato@email.com.br</div>
+              <div style="display:flex;gap:40px;flex-wrap:wrap;margin-bottom:16px;">
+                <div>
+                  <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinza);margin-bottom:3px;">CARGO</div>
+                  <div style="font-size:13px;font-weight:600;">Deputado Estadual</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinza);margin-bottom:3px;">Nº URNA</div>
+                  <div style="font-size:13px;font-family:'JetBrains Mono',monospace;" class="dado-protegido">00000</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinza);margin-bottom:3px;">UF</div>
+                  <div style="font-size:13px;font-weight:600;">PE</div>
+                </div>
+                <div>
+                  <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--cinza);margin-bottom:3px;">PARTIDO</div>
+                  <div style="font-size:13px;font-weight:600;">PT</div>
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--cinza);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                <span>16 de 16 módulos concluídos</span>
+                <span style="font-weight:700;color:var(--tinta);">100%</span>
+              </div>
+              <div style="height:8px;background:var(--pedra);border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:100%;background:var(--tinta);border-radius:4px;"></div>
+              </div>
+              <div style="margin-top:10px;"><span class="badge badge-cinza">Aguardando análise</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+              <div style="border:1px solid var(--pedra);border-radius:8px;padding:20px;background:var(--branco);text-align:center;">
+                <div style="font-size:13px;font-weight:600;color:var(--grafite);">Saiba como preencher os módulos</div>
+                <div style="font-size:11px;color:var(--cinza);margin-top:4px;">Tutorial passo a passo para completar seu registro.</div>
+              </div>
+              <div style="border:1px solid var(--pedra);border-radius:8px;padding:20px;background:var(--branco);text-align:center;opacity:.5;">
+                <div style="font-size:13px;font-weight:600;color:var(--grafite);">Continue de onde parou</div>
+                <div style="font-size:11px;color:var(--cinza);margin-top:4px;">Todos os módulos foram preenchidos.</div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--pedra);border-radius:8px;padding:16px 20px;background:var(--branco);display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;font-weight:600;color:var(--grafite);">Acesse a Base de Conhecimento</div>
+              <span style="color:var(--bronze);font-size:18px;">→</span>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:14px;font-size:13px;color:var(--cinza);">O candidato acompanha o próprio progresso em tempo real. Essa mesma visão — com o percentual de conclusão de cada um — está disponível também para o dirigente partidário e a equipe jurídica.</p>
+      </div>
+
+      <!-- Aba 2: Dados pessoais -->
+      <div class="tab-painel" id="painel-tela-dados">
+        <div class="tela-sistema">
+          <div class="tela-topo">
+            <span class="tela-bolinha" style="background:#FF5F56;"></span>
+            <span class="tela-bolinha" style="background:#FFBD2E;"></span>
+            <span class="tela-bolinha" style="background:#27C93F;"></span>
+            <div class="tela-url">app.elegis.com.br/modulo/dados-pessoais</div>
+          </div>
+          <div style="background:var(--branco);padding:28px 32px;">
+            <div style="font-size:11px;color:var(--cinza);margin-bottom:4px;">MÓDULO 2 DE 16</div>
+            <div style="font-size:20px;font-weight:700;color:var(--grafite);margin-bottom:22px;">Dados pessoais</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div style="grid-column:1/-1;">
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">Nome completo</label>
+                <div style="border:1.5px solid var(--esmeralda);border-radius:6px;padding:10px 14px;font-size:13px;background:var(--branco);" class="dado-protegido">Nome Completo do Candidato</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">Nome de urna</label>
+                <div style="border:1px solid var(--pedra);border-radius:6px;padding:10px 14px;font-size:13px;background:var(--cinza-lt);" class="dado-protegido">Nome de Urna</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">Cargo</label>
+                <div style="border:1px solid var(--pedra);border-radius:6px;padding:10px 14px;font-size:13px;background:var(--cinza-lt);">Deputado Estadual</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">Data de nascimento</label>
+                <div style="border:1px solid var(--pedra);border-radius:6px;padding:10px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;background:var(--cinza-lt);" class="dado-protegido">DD/MM/AAAA</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">CPF</label>
+                <div style="border:1px solid var(--pedra);border-radius:6px;padding:10px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;background:var(--cinza-lt);" class="dado-protegido">000.000.000-00</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--grafite);letter-spacing:.04em;display:block;margin-bottom:5px;">Nome RFB</label>
+                <div style="border:1px solid var(--pedra);border-radius:6px;padding:10px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;background:var(--cinza-lt);" class="dado-protegido">NOME CONFORME RECEITA FEDERAL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:14px;font-size:13px;color:var(--cinza);">O preenchimento é feito diretamente pelo candidato. Os campos são validados automaticamente — o sistema detecta inconsistências e só permite o avanço quando os dados estão corretos e completos.</p>
+      </div>
+
+      <!-- Aba 3: Documentos -->
+      <div class="tab-painel" id="painel-tela-docs">
+        <div class="tela-sistema">
+          <div class="tela-topo">
+            <span class="tela-bolinha" style="background:#FF5F56;"></span>
+            <span class="tela-bolinha" style="background:#FFBD2E;"></span>
+            <span class="tela-bolinha" style="background:#27C93F;"></span>
+            <div class="tela-url">app.elegis.com.br/modulo/anexos</div>
+          </div>
+          <div style="background:var(--cinza-lt);padding:24px 28px;display:flex;flex-direction:column;gap:14px;">
+            <div style="border:1px solid var(--pedra);border-radius:8px;background:var(--branco);overflow:hidden;">
+              <div style="background:var(--tinta);color:var(--marfim);padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;">
+                <span>Obrigatório · Documento de Identificação Oficial</span>
+                <span class="badge" style="background:rgba(255,255,255,.15);color:var(--marfim);border-color:rgba(255,255,255,.2);">Em análise</span>
+              </div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:12px;color:var(--cinza);margin-bottom:8px;">RG, CNH, Passaporte ou similar com foto</div>
+                <div style="background:var(--azul-lt);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--azul);margin-bottom:10px;">Envio confirmado. Não é mais possível realizar alterações até a análise do jurídico.</div>
+                <div style="font-size:11px;color:var(--cinza);margin-bottom:6px;">VERSÃO ATUAL (V1)</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <button class="btn" style="border:1px solid var(--pedra);font-size:12px;padding:6px 12px;border-radius:5px;">Editar</button>
+                  <button class="btn" style="border:1px solid var(--esmeralda);color:var(--esmeralda);font-size:12px;padding:6px 12px;border-radius:5px;">Aprovar</button>
+                  <button class="btn" style="border:1px solid var(--critico);color:var(--critico);font-size:12px;padding:6px 12px;border-radius:5px;">Reprovar</button>
+                  <span style="font-size:11px;color:var(--cinza);">PDF, JPG, PNG – limite 1 MB</span>
+                </div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--pedra);border-radius:8px;background:var(--branco);overflow:hidden;">
+              <div style="background:var(--tinta);color:var(--marfim);padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;">
+                <span>Obrigatório · Comprovante de Alfabetização</span>
+                <span class="badge" style="background:rgba(255,255,255,.15);color:var(--marfim);border-color:rgba(255,255,255,.2);">Em análise</span>
+              </div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:12px;color:var(--cinza);margin-bottom:8px;">Diploma, carteira profissional, CNH, etc.</div>
+                <div style="background:var(--azul-lt);border-radius:5px;padding:8px 12px;font-size:12px;color:var(--azul);margin-bottom:10px;">Envio confirmado. Não é mais possível realizar alterações até a análise do jurídico.</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn" style="border:1px solid var(--pedra);font-size:12px;padding:6px 12px;border-radius:5px;">Editar</button>
+                  <button class="btn" style="border:1px solid var(--esmeralda);color:var(--esmeralda);font-size:12px;padding:6px 12px;border-radius:5px;">Aprovar</button>
+                  <button class="btn" style="border:1px solid var(--critico);color:var(--critico);font-size:12px;padding:6px 12px;border-radius:5px;">Reprovar</button>
+                </div>
+              </div>
+            </div>
+            <div style="border:1px solid var(--pedra);border-radius:8px;background:var(--branco);overflow:hidden;">
+              <div style="background:var(--tinta);color:var(--marfim);padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;">
+                <span>Obrigatório · Procuração</span>
+                <span class="badge badge-verde" style="background:rgba(0,161,112,.25);color:#E0F5EC;border-color:rgba(0,161,112,.3);">Aprovado</span>
+              </div>
+              <div style="padding:14px 16px;">
+                <div style="font-size:12px;color:var(--cinza);margin-bottom:8px;">Procuração para registro de candidatura assinada</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <button class="btn" style="border:1px solid var(--pedra);font-size:12px;padding:6px 12px;border-radius:5px;">Editar</button>
+                  <button class="btn" style="border:1px solid var(--esmeralda);color:var(--esmeralda);font-size:12px;padding:6px 12px;border-radius:5px;">Aprovar</button>
+                  <button class="btn" style="border:1px solid var(--critico);color:var(--critico);font-size:12px;padding:6px 12px;border-radius:5px;">Reprovar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:14px;font-size:13px;color:var(--cinza);">Cada documento tem controle de versão próprio. Após o envio, o candidato não pode mais alterar o arquivo sem que a equipe jurídica intervenha — garantindo a integridade do processo.</p>
+      </div>
+
+      <h3>Os 16 módulos</h3>
+      <div class="modulos-grid">
+        <div class="modulo-item"><span class="modulo-num">01</span> Correio eletrônico</div>
+        <div class="modulo-item"><span class="modulo-num">02</span> Dados pessoais</div>
+        <div class="modulo-item"><span class="modulo-num">03</span> Nacionalidade e origem</div>
+        <div class="modulo-item"><span class="modulo-num">04</span> Gênero e identidade</div>
+        <div class="modulo-item"><span class="modulo-num">05</span> Estado civil e instrução</div>
+        <div class="modulo-item"><span class="modulo-num">06</span> Deficiência / PCD</div>
+        <div class="modulo-item"><span class="modulo-num">07</span> Dados da candidatura</div>
+        <div class="modulo-item"><span class="modulo-num">08</span> Telefone</div>
+        <div class="modulo-item"><span class="modulo-num">09</span> Endereço</div>
+        <div class="modulo-item"><span class="modulo-num">10</span> Declaração de bens</div>
+        <div class="modulo-item"><span class="modulo-num">11</span> Eleição / histórico</div>
+        <div class="modulo-item"><span class="modulo-num">12</span> Sites e redes sociais</div>
+        <div class="modulo-item"><span class="modulo-num">13</span> Gerar procuração</div>
+        <div class="modulo-item"><span class="modulo-num">14</span> Foto oficial</div>
+        <div class="modulo-item"><span class="modulo-num">15</span> Anexos / documentos</div>
+        <div class="modulo-item"><span class="modulo-num">16</span> Revisão final</div>
+      </div>
+    </section>
+
+    <!-- ══ 4: PAINEL JURÍDICO ══ -->
+    <section id="juridico">
+      <h2><span class="num">4</span>Painel Jurídico</h2>
+      <p class="lead-sector">Enquanto os candidatos preenchem seus módulos, a equipe do escritório trabalha em paralelo — analisando cada documento com cuidado e deixando um rastro de cada decisão tomada.</p>
+
+      <h3>Como funciona a validação</h3>
+      <div class="fluxo-decisao">
+        <div class="fluxo-caixa">Candidato envia o documento</div>
+        <div class="fluxo-linha-v"></div>
+        <div class="fluxo-caixa decisao">Equipe jurídica analisa</div>
+        <div class="fluxo-linha-v"></div>
+        <div class="fluxo-ramos">
+          <div class="fluxo-ramo">
+            <span class="fluxo-ramo-label" style="color:var(--esmeralda);">Aprovado</span>
+            <div class="fluxo-caixa" style="border-color:var(--esmeralda);background:var(--esmeralda-lt);font-size:12px;">Módulo concluído. Candidato avança para o próximo.</div>
+          </div>
+          <div class="fluxo-ramo">
+            <span class="fluxo-ramo-label" style="color:var(--critico);">Reprovado</span>
+            <div class="fluxo-caixa" style="border-color:var(--critico);background:var(--critico-lt);font-size:12px;">Candidato recebe notificação com o motivo e envia uma nova versão.</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Status dos documentos — o que cada um significa</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>O que significa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-cinza">Pendente</span></td>
+            <td>O candidato ainda não enviou este documento. O módulo está aguardando o upload.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-ambar">Em análise</span></td>
+            <td>O documento foi enviado e está na fila de revisão da equipe jurídica. Nenhuma alteração pode ser feita pelo candidato enquanto a análise está em curso.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-verde">Aprovado</span></td>
+            <td>O documento foi validado pela equipe jurídica e está em conformidade com as exigências do TSE. Módulo concluído.</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-critico">Reprovado</span></td>
+            <td>O documento apresentou algum problema — ilegibilidade, validade vencida, formato incorreto ou não conformidade com as normas. O candidato é notificado com o motivo e pode enviar uma nova versão.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="alerta">
+        <strong>Controle de versão em todos os documentos</strong>
+        Cada reenvio gera uma nova versão (V1, V2…). O histórico completo é mantido — a equipe jurídica sempre sabe o que foi alterado e quem fez cada envio.
+      </div>
+    </section>
+
+    <!-- ══ 5: CONVENÇÃO E ATA ══ -->
+    <section id="convencao">
+      <h2><span class="num">5</span>Convenção e Ata</h2>
+      <p class="lead-sector">O dia da convenção costuma ser tenso quando a documentação não está organizada. Com o Elegis, você chega lá com tudo pronto — e a ata sai em minutos.</p>
+
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-data">Fase 1 · Pré-convenção</div>
+          <div class="tl-titulo">Apenas candidatos aprovados na lista</div>
+          <div class="tl-desc">O sistema exibe automaticamente quais candidatos têm todos os módulos aprovados e estão aptos a constar na ata. Quem ainda tem pendências não aparece na lista — sem exceções.</div>
+        </div>
+        <div class="tl-item alta">
+          <div class="tl-data">Fase 2 · Dia da convenção</div>
+          <div class="tl-titulo">Ata gerada com um clique</div>
+          <div class="tl-desc">O partido informa os dados da convenção — data, local, deliberações — e o sistema monta a ata com todos os candidatos aprovados já preenchidos: nome, cargo, partido, UF e dados de registro. Nenhuma digitação manual.</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-data">Fase 3 · Pós-convenção</div>
+          <div class="tl-titulo">Assinatura e encaminhamento</div>
+          <div class="tl-desc">A ata gerada é revisada e assinada pelos dirigentes partidários, depois encaminhada ao escritório para instruir o processo de registro de candidatura.</div>
+        </div>
+      </div>
+
+      <div class="alerta alerta-verde">
+        <strong>Sem retrabalho no dia mais importante</strong>
+        Como toda a documentação já foi validada previamente, a ata não exige nenhuma redigitação — eliminando erros, inconsistências e o risco de discrepância entre o que foi analisado e o que é registrado.
+      </div>
+    </section>
+
+    <!-- ══ 6: CANDEX E PJE ══ -->
+    <section id="candex">
+      <h2><span class="num">6</span>Candex e PJe</h2>
+      <p class="lead-sector">A convenção é o começo do processo jurídico, não o fim. O escritório acompanha cada candidatura até o resultado final no TRE.</p>
+
+      <div class="grid-assimetrico">
+        <div>
+          <h3>Registro no Candex</h3>
+          <p>Com base nos dados e documentos já aprovados no Elegis, os candidatos são registrados no Candex — o sistema do TSE para registro de candidaturas. Todo o material que foi cuidadosamente validado ao longo do processo é aproveitado diretamente, sem retrabalho e sem risco de inconsistência entre o que foi analisado e o que é protocolado.</p>
+
+          <h3>Acompanhamento do RCC no PJe</h3>
+          <p>O Registro de Candidatura e Convenção tramita no Processo Judicial Eletrônico perante o TRE competente. O escritório assume o acompanhamento completo: monitora as intimações, responde a diligências, defende candidaturas impugnadas e interpõe os recursos cabíveis.</p>
+
+          <div class="fluxo-grade" style="margin-top:20px;">
+            <div class="fluxo-passo">
+              <span class="fluxo-num">01</span>
+              <h4>Elegis</h4>
+              <p>Dados e documentos validados</p>
+            </div>
+            <div class="fluxo-seta">→</div>
+            <div class="fluxo-passo">
+              <span class="fluxo-num">02</span>
+              <h4>Candex · TSE</h4>
+              <p>Registro de candidatura protocolado</p>
+            </div>
+            <div class="fluxo-seta">→</div>
+            <div class="fluxo-passo">
+              <span class="fluxo-num">03</span>
+              <h4>PJe · TRE</h4>
+              <p>Acompanhamento do RCC até o resultado</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="painel-lateral">
+          <h4>O que o escritório faz no PJe</h4>
+          <div class="timeline" style="margin-top:10px;">
+            <div class="tl-item" style="margin-bottom:16px;">
+              <div class="tl-titulo" style="font-size:13px;">Monitoramento de intimações</div>
+              <div class="tl-desc" style="font-size:12px;">Prazos acompanhados dia a dia, sem risco de perda.</div>
+            </div>
+            <div class="tl-item" style="margin-bottom:16px;">
+              <div class="tl-titulo" style="font-size:13px;">Resposta a diligências</div>
+              <div class="tl-desc" style="font-size:12px;">Atendimento imediato a pedidos de complementação documental.</div>
+            </div>
+            <div class="tl-item" style="margin-bottom:16px;">
+              <div class="tl-titulo" style="font-size:13px;">Defesa contra impugnações</div>
+              <div class="tl-desc" style="font-size:12px;">Defesa técnica de candidaturas questionadas por terceiros.</div>
+            </div>
+            <div class="tl-item" style="margin-bottom:0;">
+              <div class="tl-titulo" style="font-size:13px;">Recursos eleitorais</div>
+              <div class="tl-desc" style="font-size:12px;">Interposição de RRCI, RCED e demais recursos cabíveis.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ 7: EQUIPE E CONTATO ══ -->
+    <section id="equipe">
+      <h2><span class="num">7</span>Equipe e Contato</h2>
+      <p class="lead-sector">O Elegis é operado diretamente pelos advogados do escritório — não por terceiros ou plataformas genéricas. Você sempre fala com quem está de fato responsável pelo processo.</p>
+
+      <div class="perfil">
+        <div class="perfil-avatar">MM</div>
+        <div>
+          <div class="perfil-nome">Monteiro e Monteiro Advogados Associados</div>
+          <div class="perfil-cargo">Direito Eleitoral · Desde 1991</div>
+          <p class="perfil-desc">Escritório com trajetória consolidada em direito eleitoral em Pernambuco. Desenvolveu o Elegis como ferramenta proprietária para dar conta de toda a complexidade do processo de candidatura — do primeiro cadastro ao acompanhamento judicial no TRE.</p>
+        </div>
+      </div>
+
+      <h3>Canal de assessoria eleitoral</h3>
+      <p>Para dúvidas, orientações e acompanhamento do processo, entre em contato diretamente com o escritório:</p>
+
+      <div class="contato-grid">
+        <div class="contato-item">
+          <div class="contato-rotulo">Área</div>
+          <div class="contato-valor" style="font-family:'Poppins',sans-serif;font-size:14px;">Assessoria Eleitoral</div>
+        </div>
+        <div class="contato-item">
+          <div class="contato-rotulo">E-mail</div>
+          <div class="contato-valor">eleitoral@monteiro.adv.br</div>
+        </div>
+      </div>
+
+      <div class="alerta alerta-verde" style="margin-top:24px;">
+        <strong>Atendimento direto, sem intermediários</strong>
+        Candidatos, dirigentes e coordenadores podem acionar o escritório diretamente por e-mail para qualquer etapa do processo.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <strong>Monteiro e Monteiro Advogados Associados</strong> · Elegis · Sistema para Registro de Candidatura<br>
+  Apresentação Confidencial · Gestão Documental de Candidatos · Julho 2026
+</footer>
+
+<script>
+// Barra de progresso
+window.addEventListener('scroll', () => {
+  const doc = document.documentElement;
+  const total = doc.scrollHeight - doc.clientHeight;
+  if (total > 0) document.getElementById('progresso-barra').style.width = (doc.scrollTop / total * 100).toFixed(1) + '%';
+});
+
+// Navegação ativa
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sumario a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('ativo'));
+      const a = document.querySelector(`.sumario a[href="#${entry.target.id}"]`);
+      if (a) a.classList.add('ativo');
+    }
+  });
+}, { threshold: 0.2 });
+sections.forEach(s => observer.observe(s));
+
+// Abas
+function mudarAba(btn, idPainel) {
+  const nav = btn.parentElement;
+  nav.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+  const pai = document.getElementById(idPainel).parentElement;
+  pai.querySelectorAll('.tab-painel').forEach(p => p.classList.remove('ativo'));
+  document.getElementById(idPainel).classList.add('ativo');
+}
+</script>
+</body>
+</html>
